@@ -1,0 +1,8 @@
+node_modules/
+.n8n/
+.env
+data/
+modelos/*.onnx
+imagenes/entrada/
+imagenes/[0-9]/
+bin/

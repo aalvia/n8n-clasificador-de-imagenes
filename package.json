@@ -1,0 +1,14 @@
+{
+  "name": "digitos-n8n-demo",
+  "private": true,
+  "description": "Demo de n8n: clasifica imagenes de digitos del 0 al 9 y las mueve a su carpeta.",
+  "scripts": {
+    "probar": "node lib/probar.js"
+  },
+  "dependencies": {
+    "jpeg-js": "^0.4.4",
+    "n8n": "2.47.7",
+    "onnxruntime-node": "^1.22.0",
+    "pngjs": "^7.0.0"
+  }
+}

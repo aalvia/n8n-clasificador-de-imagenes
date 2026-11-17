@@ -1,0 +1,208 @@
+[
+  {
+    "name": "Clasificar digitos",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "d1000000-0000-4000-8000-000000000001",
+        "name": "Probar a mano",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [0, 80]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "clasificar",
+          "authentication": "none",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "id": "d1000000-0000-4000-8000-000000000002",
+        "name": "Clasificar ahora",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [0, 280],
+        "webhookId": "d1000000-0000-4000-8000-000000000002"
+      },
+      {
+        "parameters": {
+          "url": "http://127.0.0.1:3456/pendientes",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "id": "d1000000-0000-4000-8000-000000000003",
+        "name": "Listar entrada",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [280, 180],
+        "notes": "Lee todas las imagenes que estan esperando, de una en una.",
+        "notesInFlow": true
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "archivos",
+          "include": "noOtherFields",
+          "options": {}
+        },
+        "id": "d1000000-0000-4000-8000-000000000004",
+        "name": "Separar imagenes",
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [540, 180]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://127.0.0.1:3456/clasificar",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ nombre: $json.nombre }) }}",
+          "options": {
+            "timeout": 20000
+          }
+        },
+        "id": "d1000000-0000-4000-8000-000000000005",
+        "name": "Clasificar digito",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [800, 180],
+        "notes": "Modelo MNIST de 0 a 9. Solo devuelve el digito. No mueve el archivo.",
+        "notesInFlow": true
+      },
+      {
+        "parameters": {
+          "operation": "read",
+          "fileSelector": "={{ $json.origen }}",
+          "options": {}
+        },
+        "id": "d1000000-0000-4000-8000-000000000006",
+        "name": "Leer imagen",
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1.1,
+        "position": [1060, 180]
+      },
+      {
+        "parameters": {
+          "operation": "write",
+          "fileName": "={{ $('Clasificar digito').item.json.destino }}",
+          "dataPropertyName": "data",
+          "options": {}
+        },
+        "id": "d1000000-0000-4000-8000-000000000007",
+        "name": "Guardar en carpeta",
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1.1,
+        "position": [1320, 180],
+        "notes": "n8n escribe la imagen en imagenes/0 ... imagenes/9 segun el digito.",
+        "notesInFlow": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://127.0.0.1:3456/quitar",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ nombre: $('Clasificar digito').item.json.nombre, digito: $('Clasificar digito').item.json.digito, confianza: $('Clasificar digito').item.json.confianza }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "id": "d1000000-0000-4000-8000-000000000008",
+        "name": "Quitar de entrada",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [1580, 180],
+        "notes": "Solo borra el original cuando la copia ya esta en la carpeta del digito.",
+        "notesInFlow": true
+      }
+    ],
+    "connections": {
+      "Probar a mano": {
+        "main": [
+          [
+            {
+              "node": "Listar entrada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Clasificar ahora": {
+        "main": [
+          [
+            {
+              "node": "Listar entrada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Listar entrada": {
+        "main": [
+          [
+            {
+              "node": "Separar imagenes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Separar imagenes": {
+        "main": [
+          [
+            {
+              "node": "Clasificar digito",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Clasificar digito": {
+        "main": [
+          [
+            {
+              "node": "Leer imagen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer imagen": {
+        "main": [
+          [
+            {
+              "node": "Guardar en carpeta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Guardar en carpeta": {
+        "main": [
+          [
+            {
+              "node": "Quitar de entrada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "executionTimeout": 120
+    },
+    "active": false
+  }
+]
